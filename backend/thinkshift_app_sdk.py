@@ -1,6 +1,6 @@
 """ThinkShift AI backend server — Agora Agent SDK version (for testing).
 
-Endpoints: /token, /start-agent, /stop-agent, /interrupt-agent.
+Endpoints: /token, /start-agent, /stop-agent, /interrupt-agent, /analyze-homework.
 The agent is started the way Agora's agent-quickstart-android template does it:
 
   - uses the `agora-agents` SDK instead of a hand-built REST payload
@@ -12,9 +12,10 @@ The agent is started the way Agora's agent-quickstart-android template does it:
 Layout:
   constants.py     — all config and constants
   agora_client.py  — Agora tokens, SDK sessions, REST stop fallback
+  vision_client.py — Gemini description of homework photos
   this file        — Flask routes only
 
-Install:  pip install agora-agents==2.8.1
+Install:  pip install agora-agents==2.8.1 google-genai
 """
 
 import time
@@ -24,9 +25,11 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 import agora_client
+import vision_client
 from constants import (
     AGORA_APP_ID, AGORA_AREA, SERVER_HOST, SERVER_PORT,
     ASR_MODEL, LLM_MODEL, TTS_MODEL, TTS_VOICE_ID,
+    MAX_IMAGE_BYTES, HOMEWORK_THINK_TEMPLATE,
 )
 
 print = functools.partial(print, flush=True)
@@ -132,6 +135,40 @@ def interrupt_agent():
         return jsonify({"error": str(e)}), 502
     print(f"[/interrupt-agent SDK] http={resp.status_code} body={resp.text}")
     return jsonify({"status": resp.status_code}), resp.status_code
+
+
+# ── 5) Homework photo → Gemini description → agent speaks about it ───────
+@app.route("/analyze-homework", methods=["POST"])
+def analyze_homework():
+    agent_id = request.form.get("agent_id")
+    image_file = request.files.get("image")
+    if not agent_id or not image_file:
+        return jsonify({"error": "agent_id and image are required"}), 400
+
+    mime_type = image_file.mimetype or ""
+    if not mime_type.startswith("image/"):
+        return jsonify({"error": "image must be an image file"}), 400
+    image_bytes = image_file.read(MAX_IMAGE_BYTES + 1)
+    if len(image_bytes) > MAX_IMAGE_BYTES:
+        return jsonify({"error": "image is too large (max 5 MB)"}), 400
+
+    print(f"[/analyze-homework] agent_id={agent_id} {mime_type} {len(image_bytes)} bytes")
+    try:
+        description = vision_client.describe_homework(image_bytes, mime_type)
+    except Exception as e:
+        print("[/analyze-homework] vision FAILED:", repr(e))
+        return jsonify({"error": f"could not read the photo: {e}"}), 502
+    print("[/analyze-homework] description:", description)
+
+    try:
+        resp = agora_client.think(agent_id, HOMEWORK_THINK_TEMPLATE.format(description=description))
+    except Exception as e:
+        print("[/analyze-homework] think EXCEPTION:", repr(e))
+        return jsonify({"error": str(e)}), 502
+    print(f"[/analyze-homework] think http={resp.status_code} body={resp.text}")
+    if not resp.ok:
+        return jsonify({"status": resp.status_code, "error": resp.text}), resp.status_code
+    return jsonify({"status": 200, "description": description}), 200
 
 
 @app.route("/", methods=["GET"])

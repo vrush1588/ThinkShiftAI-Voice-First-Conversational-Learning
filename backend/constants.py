@@ -29,6 +29,26 @@ AREA_BY_NAME = {
 
 AGORA_API_BASE_URL = "https://api.agora.io/api/conversational-ai-agent/v2"
 
+# ── Homework photo (Gemini vision) ───────────────────────────────────────
+GEMINI_API_KEY      = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_VISION_MODEL = os.environ.get("GEMINI_VISION_MODEL", "gemini-2.5-flash")
+MAX_IMAGE_BYTES = 5 * 1024 * 1024
+VISION_TIMEOUT_SECONDS = 30
+
+VISION_PROMPT = (
+    "This is a photo of a student's homework or textbook page. "
+    "In 2-3 short sentences, say what subject/topic this is and what the "
+    "core question or problem is. Do not solve it or give the answer. "
+    "Use the language written on the page. "
+    "This will be read aloud by a voice tutor, so keep it natural and brief."
+)
+
+HOMEWORK_THINK_TEMPLATE = (
+    "[The student just showed you a photo. What's on it: {description}] "
+    "Briefly acknowledge what you see, then ask ONE guiding question "
+    "to help them take the first step — don't solve it for them."
+)
+
 # ── Models (defaults match the template's managed models) ────────────────
 ASR_MODEL    = os.environ.get("SDK_ASR_MODEL", "nova-3")
 ASR_LANGUAGE = os.environ.get("ASR_LANGUAGE", "en")

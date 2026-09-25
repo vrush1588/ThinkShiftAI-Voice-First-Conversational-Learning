@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:image_picker/image_picker.dart';
 
 class TokenResult {
   final String token;
@@ -83,6 +85,36 @@ class ThinkShiftApi {
       agentId: agentId,
       rawBody: resp.body,
     );
+  }
+
+  /// Sends a homework photo; the backend describes it and the agent talks about it.
+  /// Returns the backend's description of the photo.
+  Future<String> analyzeHomework(String agentId, XFile image) async {
+    final uri = Uri.parse("$baseUrl/analyze-homework");
+    final request = http.MultipartRequest("POST", uri)
+      ..fields['agent_id'] = agentId
+      ..files.add(http.MultipartFile.fromBytes(
+        'image',
+        await image.readAsBytes(),
+        filename: image.name,
+        contentType: MediaType.parse(image.mimeType ?? _mimeFromName(image.name)),
+      ));
+    final streamed = await request.send().timeout(const Duration(seconds: 45));
+    final resp = await http.Response.fromStream(streamed);
+
+    if (resp.statusCode != 200) {
+      throw Exception("Homework upload failed (${resp.statusCode}): ${resp.body}");
+    }
+    final json = jsonDecode(resp.body) as Map<String, dynamic>;
+    return json['description'] as String? ?? "";
+  }
+
+  static String _mimeFromName(String name) {
+    final lower = name.toLowerCase();
+    if (lower.endsWith(".png")) return "image/png";
+    if (lower.endsWith(".webp")) return "image/webp";
+    if (lower.endsWith(".heic")) return "image/heic";
+    return "image/jpeg";
   }
 
   Future<void> stopAgent(String agentId) async {

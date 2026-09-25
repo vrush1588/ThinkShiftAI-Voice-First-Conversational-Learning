@@ -162,6 +162,21 @@ def interrupt_agent(agent_id):
                          timeout=REST_STOP_TIMEOUT_SECONDS)
 
 
+def think(agent_id, text):
+    """Inject a text instruction into the running agent; it replies by voice.
+    Returns the requests.Response from Agora."""
+    url = f"{AGORA_API_BASE_URL}/projects/{AGORA_APP_ID}/agents/{agent_id}/think"
+    payload = {
+        "text": text,
+        "on_listening_action": "interrupt",
+        "on_thinking_action": "interrupt",
+        "on_speaking_action": "interrupt",
+        "interruptable": True,
+    }
+    return requests.post(url, headers=_basic_auth_header(), json=payload,
+                         timeout=REST_STOP_TIMEOUT_SECONDS)
+
+
 def stop_agent(agent_id):
     """Stop the agent. Returns True if stopped via the in-memory session,
     otherwise returns the REST fallback's requests.Response."""

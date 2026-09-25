@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'config.dart';
@@ -34,6 +35,7 @@ class _VoiceScreenState extends State<VoiceScreen> with TickerProviderStateMixin
   RtcEngine? _engine;
   String? _agentId;
   Timer? _joinTimeoutTimer;
+  bool _analyzingPhoto = false;
 
   bool get _buttonEnabled =>
       _state == VoiceState.idle || _state == VoiceState.listening || _state == VoiceState.error;
@@ -258,10 +260,61 @@ class _VoiceScreenState extends State<VoiceScreen> with TickerProviderStateMixin
     }
   }
 
-  void _showComingSoon(String feature) {
+  void _showComingSoon(String feature) => _showSnack("$feature coming soon");
+
+  void _showSnack(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text("$feature coming soon")));
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _onHomeworkPressed() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text("Take photo"),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text("Choose from gallery"),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+
+    final XFile? image;
+    try {
+      image = await ImagePicker().pickImage(source: source, maxWidth: 1600, imageQuality: 80);
+    } catch (e) {
+      _log("pickImage FAILED: $e");
+      if (mounted) _showSnack("Could not open the ${source == ImageSource.camera ? "camera" : "gallery"}.");
+      return;
+    }
+    final agentId = _agentId;
+    if (image == null || agentId == null || !mounted) return;
+
+    setState(() => _analyzingPhoto = true);
+    _showSnack("Looking at your homework...");
+    _log("analyzeHomework(agentId=$agentId, file=${image.name})");
+    try {
+      final description = await _api.analyzeHomework(agentId, image);
+      _log("analyzeHomework ok: $description");
+      if (mounted) ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    } catch (e) {
+      _log("analyzeHomework FAILED: $e");
+      if (mounted) _showSnack("Couldn't read that photo. Please try again.");
+    } finally {
+      if (mounted) setState(() => _analyzingPhoto = false);
+    }
   }
 
   @override
@@ -578,9 +631,18 @@ class _VoiceScreenState extends State<VoiceScreen> with TickerProviderStateMixin
           child: Row(
             children: [
               IconButton(
-                tooltip: "Keyboard input",
-                onPressed: () => _showComingSoon("Keyboard input"),
-                icon: const Icon(Icons.keyboard_outlined, color: _Palette.slate400),
+                tooltip: "Show homework",
+                onPressed: listening && !_analyzingPhoto ? _onHomeworkPressed : null,
+                icon: _analyzingPhoto
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: _Palette.indigo500),
+                      )
+                    : Icon(
+                        Icons.photo_camera_outlined,
+                        color: listening ? _Palette.indigo600 : _Palette.slate400.withValues(alpha: 0.5),
+                      ),
               ),
               Expanded(
                 child: AnimatedBuilder(

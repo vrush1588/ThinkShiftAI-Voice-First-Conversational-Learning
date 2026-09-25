@@ -6,7 +6,9 @@ plugins {
 
 android {
     namespace = "com.thinkshift.thinkshift"
-    compileSdk = 34
+    // 36 is required by image_picker's AndroidX dependencies (compile-time only;
+    // targetSdk/minSdk below are unchanged).
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

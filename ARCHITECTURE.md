@@ -29,7 +29,7 @@ flowchart LR
         TTS[MiniMax speech-2.8-turbo]
     end
 
-    UI -- "GET /token, POST /start-agent, /stop-agent" --> Routes
+    UI -- "GET /token, POST /start-agent, /stop-agent, /analyze-homework" --> Routes
     Routes --> Client
     Client --> Const
     Client -- "Agent SDK / REST" --> Agent
@@ -104,6 +104,29 @@ The **system prompt** (`constants.SYSTEM_PROMPT`) defines the ThinkShift persona
 
 * **Student**: `/token` generates an RTC token (publisher role) and an RTM token for the requested uid. Both are valid for 1 hour.
 * **Agent**: the SDK generates the agent's own token from the App ID and certificate. The backend never builds it by hand.
+
+## Homework photo flow
+
+```mermaid
+sequenceDiagram
+    actor S as Student
+    participant App as Flutter app
+    participant BE as Backend
+    participant G as Gemini
+    participant AG as Agora agent
+
+    S->>App: Tap camera → take / pick photo (during a live conversation)
+    App->>BE: POST /analyze-homework (agent_id, image ≤ 5 MB)
+    BE->>G: image + VISION_PROMPT
+    G-->>BE: "A maths worksheet on adding fractions…"
+    BE->>AG: REST POST …/agents/{id}/think (description + "ask ONE guiding question")
+    AG-->>S: speaks: acknowledges the page, asks one guiding question
+    BE-->>App: {description}
+```
+
+* **Why not send the image to the agent directly?** The Agora Python SDK's `think`/`say` only accept text. Agora's own image messages need RTM in the app, a native client toolkit (not available for Flutter), and public image URLs. Describing the photo with Gemini and passing that text to the agent works with the setup we already have.
+* **Privacy:** photos are processed in memory and sent only to Gemini. They are never saved to disk or hosted anywhere.
+* The prompts live in `constants.py` (`VISION_PROMPT`, `HOMEWORK_THINK_TEMPLATE`). The Gemini call is in `vision_client.py`.
 
 ## Identifiers
 

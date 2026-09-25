@@ -33,6 +33,7 @@ The goal is not just to add a microphone to a chatbot, but to make **voice the p
 * ✋ **Natural interruptions**: the student can talk over the agent at any time and it stops to listen
 * ⏳ **No awkward silence**: if the AI takes a moment to answer, it says a short filler line ("Hmm, let me think.")
 * 📚 **Student-focused topics**: General Knowledge, Science, History, Geography, Space, Environment, and everyday "why" questions
+* 📷 **Show your homework**: during a conversation, snap or pick a photo of a homework or textbook page. ThinkShift says what it sees and asks one guiding question, without giving away the answer
 * 💡 **Suggested prompts**: tap "Why is the sky blue?", "Tell me about space" or "Why do eclipses happen?" to get started
 * 📱 **Mobile-first UI**: animated AI orb, voice waves, clear connection states
 * 🌐 **Multilingual-ready**: the companion is instructed to reply in the student's language (English, Hindi, Marathi); multilingual speech recognition is next
@@ -82,9 +83,10 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full flow and [PROJECT_STRUCTURE.
 
 | Layer | Technology |
 |---|---|
-| **Mobile** | Flutter (Dart), Android · `agora_rtc_engine` · `permission_handler` · `http` |
+| **Mobile** | Flutter (Dart), Android · `agora_rtc_engine` · `permission_handler` · `http` · `image_picker` |
 | **Voice** | Agora RTC · Agora Conversational AI (agent SDK `agora-agents` 2.8.1) |
 | **AI pipeline** | Agora-managed models: Deepgram `nova-3` (STT) · OpenAI `gpt-4o-mini` (LLM) · MiniMax `speech-2.8-turbo` (TTS) |
+| **Vision** | Google Gemini (`gemini-2.5-flash`) via `google-genai`, for describing homework photos |
 | **Backend** | Python · Flask · flask-cors · `agora-token-builder` |
 
 ---
@@ -95,6 +97,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full flow and [PROJECT_STRUCTURE.
 
 * An [Agora](https://console.agora.io) project with **App Certificate** enabled and **Conversational AI** activated
 * Agora RESTful API **Customer ID / Secret**
+* A Google **Gemini API key** for the homework photo feature (free at [Google AI Studio](https://aistudio.google.com/apikey))
 * Python 3.10+
 * Flutter SDK (Dart ≥ 3.12) and an Android device or emulator
 
@@ -102,8 +105,8 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full flow and [PROJECT_STRUCTURE.
 
 ```bash
 cd backend
-pip install flask flask-cors python-dotenv requests httpx agora-token-builder agora-agents==2.8.1
-cp .env.example .env        # then fill in your Agora credentials
+pip install flask flask-cors python-dotenv requests httpx agora-token-builder agora-agents==2.8.1 google-genai
+cp .env.example .env        # then fill in your Agora credentials and Gemini key
 python thinkshift_app_sdk.py
 ```
 
@@ -139,6 +142,7 @@ The server runs on `http://0.0.0.0:8001`. Open `http://localhost:8001/` and chec
 | `POST` | `/start-agent` | `{"channel", "uid"?}` | Start the AI agent in the channel |
 | `POST` | `/interrupt-agent` | `{"agent_id"}` | Stop the agent mid-sentence (session keeps running) |
 | `POST` | `/stop-agent` | `{"agent_id"}` | Remove the agent from the channel |
+| `POST` | `/analyze-homework` | multipart: `agent_id`, `image` (max 5 MB) | Gemini describes the photo; the agent talks about it |
 
 ### Customising the companion
 
@@ -164,7 +168,7 @@ ThinkShift AI explores how **real-time voice can become the main interface for m
 ## 🔮 Future Possibilities
 
 * 🌍 **Multilingual speech**: Hindi and Marathi speech recognition with matching voices
-* ⌨️ Keyboard input and 🕘 conversation history (placeholders already in the UI)
+* ⌨️ Keyboard input and 🕘 conversation history (history placeholder already in the UI)
 * 🧠 Adaptive explanations based on the student's level
 * ❓ Voice-based quizzes and 📝 exam preparation
 * 📖 Explaining textbook content, 📚 RAG-powered learning material
