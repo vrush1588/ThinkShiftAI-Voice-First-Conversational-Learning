@@ -4,8 +4,9 @@
 // - Physical device: use your dev machine's LAN IP (run `ipconfig`, look for the
 //   Wi-Fi adapter's IPv4 address), and make sure both devices are on the same
 //   network and port 8001 is allowed through the firewall.
-// const String kBackendBaseUrl = "http://10.0.2.2:8001";
-const String kBackendBaseUrl = "http://192.168.1.5:8001";
+
+const String kBackendBaseUrl = "http://10.0.2.2:8001";
+
 
 // Fixed channel name for this single-tester MVP.
 const String kChannelName = "thinkshift_room_1";
