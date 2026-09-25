@@ -111,9 +111,15 @@ The server runs on `http://0.0.0.0:8001`. Open `http://localhost:8001/` and chec
 
 ### 2. Mobile app
 
-1. Set the backend URL in [frontend_mobile/lib/config.dart](frontend_mobile/lib/config.dart):
-   * Android emulator: `http://10.0.2.2:8001`
-   * Physical phone: `http://<your-PC-LAN-IP>:8001` (same Wi-Fi, port 8001 allowed through the firewall)
+1. Create your local config (it's git-ignored) and set the backend URL in it:
+
+   ```bash
+   cp frontend_mobile/lib/config.example.dart frontend_mobile/lib/config.dart
+   ```
+
+   * Android emulator: `http://10.0.2.2:8001` (the default)
+   * Physical phone on Wi-Fi: `http://<your-PC-LAN-IP>:8001` (same Wi-Fi, port 8001 allowed through the firewall)
+   * Physical phone over USB: run `adb reverse tcp:8001 tcp:8001` and use `http://127.0.0.1:8001`
 2. Run the app:
 
    ```bash

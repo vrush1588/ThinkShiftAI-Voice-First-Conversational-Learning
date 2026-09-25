@@ -8,6 +8,9 @@ key.properties
 google-services.json
 GoogleService-Info.plist
 
+# Local app config (backend URL); template: frontend_mobile/lib/config.example.dart
+frontend_mobile/lib/config.dart
+
 # ── Python ───────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]

@@ -18,7 +18,8 @@ ThinkShiftAI/
     ├── pubspec.yaml              Dependencies: agora_rtc_engine, http, permission_handler
     ├── lib/
     │   ├── main.dart             App entry: MaterialApp → VoiceScreen
-    │   ├── config.dart           Backend URL, channel name, local uid
+    │   ├── config.example.dart   Template for config.dart (committed)
+    │   ├── config.dart           Backend URL, channel name, local uid (git-ignored, copy from the template)
     │   ├── thinkshift_api.dart   HTTP client for /token, /start-agent, /stop-agent
     │   └── voice_screen.dart     Main screen: voice state machine, Agora RTC engine, UI
     ├── android/                  Android host project (permissions in AndroidManifest.xml)
