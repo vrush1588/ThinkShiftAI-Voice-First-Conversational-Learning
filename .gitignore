@@ -1,0 +1,45 @@
+# ── Secrets ──────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+key.properties
+google-services.json
+GoogleService-Info.plist
+
+# ── Python ───────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+
+# ── Flutter / Dart ───────────────────────────────────────────────────────
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+*.iml
+
+# ── Android ──────────────────────────────────────────────────────────────
+local.properties
+.gradle/
+.kotlin/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/gradle/wrapper/gradle-wrapper.jar
+**/android/captures/
+
+# ── IDE / OS / tools ─────────────────────────────────────────────────────
+.idea/
+.vscode/
+.claude/
+*.log
+.DS_Store
+Thumbs.db
