@@ -10,6 +10,14 @@ Built for the **Agora Voice AI Hackathon by AI Mobile Coders**, powered by **Ago
 
 ---
 
+## 🎬 Demo
+
+[![ThinkShift AI demo video](https://img.youtube.com/vi/e1_AwnC8GOs/hqdefault.jpg)](https://youtu.be/e1_AwnC8GOs)
+
+▶️ **Watch on YouTube:** https://youtu.be/e1_AwnC8GOs
+
+---
+
 ## 💡 The Idea
 
 Learning is often treated as a text-based experience:
